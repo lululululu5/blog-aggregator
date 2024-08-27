@@ -38,3 +38,13 @@ func (cfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Request, 
 
 	respondWithJSON(w, http.StatusOK, databaseFeedToFeed(feed))
 }
+
+func (cfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {
+	feeds, err := cfg.DB.GetAllFeeds(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't get feeds")
+	}
+
+	respondWithJSON(w, http.StatusOK, databaseFeedsToFeeds(feeds)) // Important to transform the database model to the correct API representation for Flexibility, Security, Data transformation, Versioning and Seperation of concerns. 
+
+}

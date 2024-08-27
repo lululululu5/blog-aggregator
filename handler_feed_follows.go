@@ -47,13 +47,13 @@ func (cfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.Req
 	err = cfg.DB.DeleteFeedFollow(r.Context(), database.DeleteFeedFollowParams{
 		ID : feedFollowID,
 		UserID: user.ID,
-	} )
+	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Could not delete Feed Follow")
 		return
 	}
 
-	respondWithJSON(w, http.StatusNoContent, "")
+	respondWithJSON(w, http.StatusNoContent, struct{}{})
 }
 
 func (cfg *apiConfig) handlerGetFeedFollowUser(w http.ResponseWriter, r *http.Request, user database.User) {

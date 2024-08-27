@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lululululu5/blog-aggregator/auth"
 	"github.com/lululululu5/blog-aggregator/internal/database"
 )
 
@@ -37,19 +36,7 @@ func(cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
 }
 
-func(cfg *apiConfig) handlerUserGetByAPI(w http.ResponseWriter, r *http.Request) {
-	apiKey, err := auth.GetApiKey(r.Header)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Authorization header wrong")
-		return 
-	}
-
-	user, err := cfg.DB.GetUserByAPI(r.Context(), apiKey)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not get user")
-		return
-	}
-
+func(cfg *apiConfig) handlerUserGetByAPI(w http.ResponseWriter, r *http.Request, user database.User) {
 	respondWithJSON(w, http.StatusAccepted, databaseUserToUser(user))
 }
 

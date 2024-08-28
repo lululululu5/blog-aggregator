@@ -17,6 +17,5 @@ type RSSItem struct {
 	Title       string `xml:"title"`
 	Link        string `xml:"link"`
 	PubDate     string `xml:"pubDate"`
-	GUID        string `xml:"guid"`
 	Description string `xml:"description"`
 }

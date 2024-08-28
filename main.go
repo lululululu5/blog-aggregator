@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -57,23 +56,25 @@ func main() {
 	mux.HandleFunc("GET /v1/healthz", handlerReadiness)
 	mux.HandleFunc("GET /v1/err", handlerError)
 
-	var wg sync.WaitGroup
-
-	go func() {
-		for {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				apiCfg.workerFeed(1)
-			}()
-			time.Sleep(60 *time.Second)
-		}
-	}()
+	// go func() {
+	// 	for {
+	// 		wg.Add(1)
+	// 		go func() {
+	// 			defer wg.Done()
+	// 			apiCfg.workerFeed(1)
+	// 		}()
+	// 		time.Sleep(60 *time.Second)
+	// 	}
+	// }()
 
 	srv := &http.Server{
 		Addr: ":" + port,
 		Handler: mux,
 	}
+
+	const collectionConcurrency = 1
+	const collectionInterval = time.Minute
+	go startScraping(dbQueries, collectionConcurrency, collectionInterval)
 
 	log.Printf("Serving on port: %s\n", port)
 	log.Fatal(srv.ListenAndServe())

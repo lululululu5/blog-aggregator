@@ -88,26 +88,26 @@ func databaseFeedFollowsToFeedFollows(feedFollows []database.FeedFollow) []FeedF
 	return result
 }
 
-type RssFeedResponse struct {
-	Title       string `json:"title"`
-	Link        string `json:"link"`
-	Published   string `json:"published"`
-	Description string `json:"description"`
-}
+// type RssFeedResponse struct {
+// 	Title       string `xml:"title"`
+// 	Link        string `xml:"link"`
+// 	Published   string `xml:"published"`
+// 	Description string `xml:"description"`
+// }
 
-func itemToRssFeed(item RSSItem) RssFeedResponse {
-	return RssFeedResponse{
-		Title: item.Title,
-		Link: item.Link,
-		Published: item.PubDate,
-		Description: item.Description,
-	}
-}
+// func itemToRssFeed(item RSSItem) RssFeedResponse {
+// 	return RssFeedResponse{
+// 		Title: item.Title,
+// 		Link: item.Link,
+// 		Published: item.PubDate,
+// 		Description: item.Description,
+// 	}
+// }
 
-func itemsToRssFeeds(items []RSSItem) []RssFeedResponse {
-	result := make([]RssFeedResponse, len(items))
-	for i, item := range items {
-		result[i] = itemToRssFeed(item)
-	}
-	return result
-}
+// func itemsToRssFeeds(items []RSSItem) []RssFeedResponse {
+// 	result := make([]RssFeedResponse, len(items))
+// 	for i, item := range items {
+// 		result[i] = itemToRssFeed(item)
+// 	}
+// 	return result
+// }

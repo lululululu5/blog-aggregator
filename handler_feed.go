@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -65,8 +66,44 @@ func (cfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {
 	feeds, err := cfg.DB.GetAllFeeds(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't get feeds")
+		return
 	}
 
 	respondWithJSON(w, http.StatusOK, databaseFeedsToFeeds(feeds)) // Important to transform the database model to the correct API representation for Flexibility, Security, Data transformation, Versioning and Seperation of concerns. 
-
 }
+
+func (cfg *apiConfig) handlerGetNextFeedsToFetch(w http.ResponseWriter, r *http.Request) {
+	var numNextFeeds int32 = 10
+	feeds, err := cfg.DB.GetNextFeedsToFetch(r.Context(), numNextFeeds)
+	if err != nil{
+		respondWithError(w, http.StatusInternalServerError, "Couldn't fetch feeds")
+		return 
+	}
+	respondWithJSON(w, http.StatusOK, databaseFeedsToFeeds(feeds))
+}
+
+// This could also be a method instead of a handler. But this handler will be with the feedID in the header
+func (cfg *apiConfig) handlerMarkFeedFetched(w http.ResponseWriter, r *http.Request) {
+	//Add feedID to url
+	feedID, err := uuid.Parse(r.PathValue("feedID"))
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not extract Feed ID")
+		return 
+	}
+	
+	err = cfg.DB.MarkFeedFetched(r.Context(), database.MarkFeedFetchedParams{
+		ID: feedID,
+		UpdatedAt: time.Now().UTC(),
+		LastFetchedAt: sql.NullTime{
+			Time: time.Now().UTC(),
+			Valid: true,
+		},
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not mark Feed as fetched.")
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, struct{}{})
+}
+

@@ -40,7 +40,6 @@ func main() {
 		DB: dbQueries,
 	} 
 
-
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /v1/users", apiCfg.handlerUserCreate)
@@ -53,19 +52,10 @@ func main() {
 	mux.HandleFunc("GET /v1/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedFollowUser))
 	mux.HandleFunc("DELETE /v1/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
 	
+	mux.HandleFunc("GET /v1/posts", apiCfg.middlewareAuth(apiCfg.handlerGetPostsByUser))
+
 	mux.HandleFunc("GET /v1/healthz", handlerReadiness)
 	mux.HandleFunc("GET /v1/err", handlerError)
-
-	// go func() {
-	// 	for {
-	// 		wg.Add(1)
-	// 		go func() {
-	// 			defer wg.Done()
-	// 			apiCfg.workerFeed(1)
-	// 		}()
-	// 		time.Sleep(60 *time.Second)
-	// 	}
-	// }()
 
 	srv := &http.Server{
 		Addr: ":" + port,

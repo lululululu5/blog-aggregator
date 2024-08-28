@@ -57,7 +57,6 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
 			publishDate = time.Now().UTC()
 		}
 
-
 		post, err := db.CreatePost(context.Background(), database.CreatePostParams{
 			ID: uuid.New(),
 			CreatedAt: time.Now().UTC(),

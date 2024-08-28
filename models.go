@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -88,26 +89,51 @@ func databaseFeedFollowsToFeedFollows(feedFollows []database.FeedFollow) []FeedF
 	return result
 }
 
-// type RssFeedResponse struct {
-// 	Title       string `xml:"title"`
-// 	Link        string `xml:"link"`
-// 	Published   string `xml:"published"`
-// 	Description string `xml:"description"`
-// }
+type PostDB struct {
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Title       string
+	Url         string
+	Description sql.NullString
+	PublishedAt time.Time
+	FeedID      uuid.UUID
+}
 
-// func itemToRssFeed(item RSSItem) RssFeedResponse {
-// 	return RssFeedResponse{
-// 		Title: item.Title,
-// 		Link: item.Link,
-// 		Published: item.PubDate,
-// 		Description: item.Description,
-// 	}
-// }
+type Post struct {
+	ID          uuid.UUID `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Title       string `json:"title"`
+	Url         string `json:"url"`
+	Description string `json:"description"`
+	PublishedAt time.Time `json:"published_at"`
+	FeedID      uuid.UUID `json:"feed_id"`
+}
 
-// func itemsToRssFeeds(items []RSSItem) []RssFeedResponse {
-// 	result := make([]RssFeedResponse, len(items))
-// 	for i, item := range items {
-// 		result[i] = itemToRssFeed(item)
-// 	}
-// 	return result
-// }
+func databasePostToPost(post database.Post) Post {
+	var description string
+	if post.Description.Valid {
+		description = post.Description.String
+	} else {
+		description = ""
+	}
+	return Post{
+		ID: post.ID,
+		CreatedAt: post.CreatedAt,
+		UpdatedAt: post.UpdatedAt,
+		Title: post.Title,
+		Url: post.Url,
+		Description: description,
+		PublishedAt: post.PublishedAt,
+		FeedID: post.FeedID,
+	}
+}
+
+func databasePostsToPosts(posts []database.Post) []Post {
+	result := make([]Post, len(posts))
+	for i, post := range posts {
+		result[i] = databasePostToPost(post)
+	}
+	return result
+}

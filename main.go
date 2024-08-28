@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/joho/godotenv"
 
@@ -48,21 +50,28 @@ func main() {
 	mux.HandleFunc("POST /v1/feeds", apiCfg.middlewareAuth(apiCfg.handlerCreateFeed))
 	mux.HandleFunc("GET /v1/feeds", apiCfg.handlerGetFeeds)
 	mux.HandleFunc("PUT /v1/feeds/mark_fetched/{feedID}", apiCfg.handlerMarkFeedFetched)
+	mux.HandleFunc("POST /v1/get_feed", apiCfg.handlerFetchFeedData)
+	mux.HandleFunc("GET /v1/next_feeds", apiCfg.handlerGetNextFeedsToFetch)
 
 	mux.HandleFunc("POST /v1/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollows))
 	mux.HandleFunc("GET /v1/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedFollowUser))
 	mux.HandleFunc("DELETE /v1/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
 	
-
-
-	mux.HandleFunc("GET /v1/next_feeds", apiCfg.handlerGetNextFeedsToFetch)
-
-
-	
-	
-	
 	mux.HandleFunc("GET /v1/healthz", handlerReadiness)
 	mux.HandleFunc("GET /v1/err", handlerError)
+
+	var wg sync.WaitGroup
+
+	go func() {
+		for {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				apiCfg.workerFeed(1)
+			}()
+			time.Sleep(60 *time.Second)
+		}
+	}()
 
 	srv := &http.Server{
 		Addr: ":" + port,
@@ -72,6 +81,4 @@ func main() {
 	log.Printf("Serving on port: %s\n", port)
 	log.Fatal(srv.ListenAndServe())
 }
-
-
 

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"net/http"
 	"time"
 
@@ -105,5 +106,37 @@ func (cfg *apiConfig) handlerMarkFeedFetched(w http.ResponseWriter, r *http.Requ
 	}
 
 	respondWithJSON(w, http.StatusNoContent, struct{}{})
+}
+
+func (cfg *apiConfig) handlerFetchFeedData(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		URL string `json:"url"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not decode parameters")
+		return
+	}
+
+	// load data for feed
+	resp, err := http.Get(params.URL)
+	if err != nil {
+		respondWithError(w, http.StatusBadGateway, "Could not connect to URL")
+		return
+	}
+	defer resp.Body.Close()
+
+	decoderXML := xml.NewDecoder(resp.Body)
+	rssFeed := RssFeed{}
+	err = decoderXML.Decode(&rssFeed)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not decode Rss Feed")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, itemsToRssFeeds(rssFeed.Channel.Items))
 }
 

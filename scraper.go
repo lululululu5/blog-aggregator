@@ -35,7 +35,7 @@ func (cfg *apiConfig) FetchFeedData(url string) ([]RssFeedResponse, error) {
 }
 
 func (cfg *apiConfig) GetNextFeedsToFetch(n int32) ([]Feed, error){
-	ctx := context.TODO()
+	ctx := context.Background()
 	feeds, err := cfg.DB.GetNextFeedsToFetch(ctx, n)
 	if err != nil {
 		return nil, errors.New("could not fetch feeds")
@@ -47,7 +47,7 @@ func (cfg *apiConfig) GetNextFeedsToFetch(n int32) ([]Feed, error){
 
 
 func (cfg *apiConfig) MarkFeedFetched(feedID uuid.UUID) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	err := cfg.DB.MarkFeedFetched(ctx, database.MarkFeedFetchedParams{
 		ID: feedID,
 		UpdatedAt: time.Now().UTC(),
@@ -71,7 +71,7 @@ func (cfg *apiConfig) workerFeed(numFeeds int32) {
 
 	for _, feed := range feedsToFetch {
 		log.Printf("Fetching the following feed: %v\n", feed.Url)
-		_, err := cfg.FetchFeedData(feed.Url)
+		_, err := cfg.FetchFeedData(feed.Url) // change it so that the feed data will be populated into the posts table
 		if err != nil {
 			log.Println("Could not fetch data")
 		} else {

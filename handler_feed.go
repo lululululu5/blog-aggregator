@@ -1,9 +1,7 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
-	"encoding/xml"
 	"net/http"
 	"time"
 
@@ -72,71 +70,3 @@ func (cfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(w, http.StatusOK, databaseFeedsToFeeds(feeds)) // Important to transform the database model to the correct API representation for Flexibility, Security, Data transformation, Versioning and Seperation of concerns. 
 }
-
-func (cfg *apiConfig) handlerGetNextFeedsToFetch(w http.ResponseWriter, r *http.Request) {
-	var numNextFeeds int32 = 10
-	feeds, err := cfg.DB.GetNextFeedsToFetch(r.Context(), numNextFeeds)
-	if err != nil{
-		respondWithError(w, http.StatusInternalServerError, "Couldn't fetch feeds")
-		return 
-	}
-	respondWithJSON(w, http.StatusOK, databaseFeedsToFeeds(feeds))
-}
-
-// This could also be a method instead of a handler. But this handler will be with the feedID in the header
-func (cfg *apiConfig) handlerMarkFeedFetched(w http.ResponseWriter, r *http.Request) {
-	//Add feedID to url
-	feedID, err := uuid.Parse(r.PathValue("feedID"))
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not extract Feed ID")
-		return 
-	}
-	
-	err = cfg.DB.MarkFeedFetched(r.Context(), database.MarkFeedFetchedParams{
-		ID: feedID,
-		UpdatedAt: time.Now().UTC(),
-		LastFetchedAt: sql.NullTime{
-			Time: time.Now().UTC(),
-			Valid: true,
-		},
-	})
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not mark Feed as fetched.")
-		return
-	}
-
-	respondWithJSON(w, http.StatusNoContent, struct{}{})
-}
-
-func (cfg *apiConfig) handlerFetchFeedData(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		URL string `json:"url"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
-	err := decoder.Decode(&params)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not decode parameters")
-		return
-	}
-
-	// load data for feed
-	resp, err := http.Get(params.URL)
-	if err != nil {
-		respondWithError(w, http.StatusBadGateway, "Could not connect to URL")
-		return
-	}
-	defer resp.Body.Close()
-
-	decoderXML := xml.NewDecoder(resp.Body)
-	rssFeed := RssFeed{}
-	err = decoderXML.Decode(&rssFeed)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not decode Rss Feed")
-		return
-	}
-
-	respondWithJSON(w, http.StatusOK, itemsToRssFeeds(rssFeed.Channel.Items))
-}
-

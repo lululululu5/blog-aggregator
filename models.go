@@ -95,16 +95,16 @@ type RssFeedResponse struct {
 	Description string `json:"description"`
 }
 
-func itemToRssFeed(item Item) RssFeedResponse {
+func itemToRssFeed(item RSSItem) RssFeedResponse {
 	return RssFeedResponse{
-		Title: item.Title.Text,
+		Title: item.Title,
 		Link: item.Link,
 		Published: item.PubDate,
 		Description: item.Description,
 	}
 }
 
-func itemsToRssFeeds(items []Item) []RssFeedResponse {
+func itemsToRssFeeds(items []RSSItem) []RssFeedResponse {
 	result := make([]RssFeedResponse, len(items))
 	for i, item := range items {
 		result[i] = itemToRssFeed(item)
